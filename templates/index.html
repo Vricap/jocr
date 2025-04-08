@@ -121,9 +121,10 @@
 {{.Content}}</textarea
             >
             <a
+                class="download"
                 style="text-align: end"
                 href="./../out/output.txt"
-                download="download-output"
+                download
                 ><p>Download</p></a
             >
         </div>
@@ -137,6 +138,7 @@
             const fileInput = document.getElementById("fileInput");
             const textArea = document.querySelector("textArea");
             const loadingPopu = document.getElementById("loading-popup");
+            const download = document.querySelector("download");
 
             fileInput.addEventListener("change", (e) => {
                 loadingPopu.style.display = "flex";

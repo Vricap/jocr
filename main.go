@@ -4,17 +4,61 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
 	"time"
 )
 
-func main() {
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
-	// fs := http.FileServer(http.Dir("static"))
-	// http.Handle("/static/", http.StripPrefix("/static/", fs))
+const HOST string = "127.0.0.1"
+const PORT string = ":8000"
 
+type Payloads struct {
+	Text     string `json:"content"`
+	Path     string `json:"path"`
+	FileName string `json:"filename"`
+}
+
+type Image struct {
+	Image multipart.File
+	Name  string
+	Type  string
+}
+
+func (img *Image) checkType() bool {
+	return img.Type == "image/png" || img.Type == "image/jpeg"
+}
+
+func (img *Image) getFullName() string {
+	fileNamePrefix := fmt.Sprintf("%s", time.Now())
+	fullName := fileNamePrefix + img.Name
+	return fullName
+}
+
+func (img *Image) saveImage(path string) error {
+	imagePath, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer imagePath.Close()
+	_, err = io.Copy(imagePath, img.Image)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (img *Image) detectImage(path string) ([]byte, error) {
+	cmd := exec.Command("tesseract", path, "-", "-l", "jav")
+	// Suppress stderr by redirecting it to /dev/null
+	cmd.Stderr = nil
+	return cmd.Output()
+}
+
+func main() {
+	fmt.Println("Server run on", HOST+PORT)
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			data := map[string]string{
@@ -26,48 +70,41 @@ func main() {
 
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			if err := r.ParseMultipartForm(20); err != nil { // since from the frontend, we send the payloads with multipart form
+			// since from the frontend, we send the payloads with multipart form
+			if err := r.ParseMultipartForm(20); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			fileType := r.FormValue("type")
-			fileName := r.FormValue("name")
-			image, _, err := r.FormFile("image")
+
+			image := &Image{
+				Type: r.FormValue("type"),
+				Name: r.FormValue("name"),
+			}
+			img, _, err := r.FormFile("image")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
+			image.Image = img
 
-			if fileType != "image/png" && fileType != "image/jpeg" {
+			if b := image.checkType(); !b {
 				http.Error(w, "Tipe file tidak didukung!", http.StatusUnsupportedMediaType)
 				return
 			}
-			fileNamePrefix := fmt.Sprintf("%s", time.Now())
-			fileName = fileNamePrefix + fileName
-			fullPath := "./out/" + fileName
 
-			path, err := os.Create(fullPath)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			defer path.Close()
-			_, err = io.Copy(path, image)
+			outImagePath := "./out/" + image.getFullName()
+			err = image.saveImage(outImagePath)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			cmd := exec.Command("tesseract", fullPath, "-", "-l", "jav", "2>/dev/null")
-			// Suppress stderr by redirecting it to /dev/null
-			cmd.Stderr = nil // or:
-			cmd.Stderr, _ = os.Open(os.DevNull)
-			output, err := cmd.Output()
+			output, err := image.detectImage(outImagePath)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			err = os.Remove(fullPath)
+			err = os.Remove(outImagePath)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -76,7 +113,7 @@ func main() {
 		}
 	})
 
-	err := http.ListenAndServe("localhost:3000", nil)
+	err := http.ListenAndServe(HOST+PORT, nil)
 	if err != nil {
 		panic(err)
 	}

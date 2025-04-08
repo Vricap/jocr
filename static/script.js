@@ -21,6 +21,7 @@ fileInput.addEventListener("change", (e) => {
     .then((data) => {
       loadingPopup.style.display = "none";
       textArea.value = data.content;
+      link.style.display = "block";
       link.href = data.path;
       link.download = data.filename;
     });

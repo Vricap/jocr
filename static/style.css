@@ -96,3 +96,7 @@ body {
         transform: rotate(360deg);
     }
 }
+
+#link {
+    display: none;
+}

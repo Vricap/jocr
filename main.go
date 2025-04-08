@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -32,7 +33,7 @@ func (img *Image) checkType() bool {
 
 func (img *Image) getFullName() string {
 	fileNamePrefix := fmt.Sprintf("%s", time.Now())
-	fullName := fileNamePrefix + img.Name
+	fullName := fileNamePrefix + "_" + img.Name
 	return fullName
 }
 
@@ -58,6 +59,10 @@ func (img *Image) detectImage(path string) ([]byte, error) {
 
 func main() {
 	fmt.Println("Server run on", HOST+PORT)
+
+	fs := http.FileServer(http.Dir("./out"))
+	http.Handle("/out/", http.StripPrefix("/out/", fs))
+
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
@@ -109,7 +114,32 @@ func main() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.Write(output)
+
+			txtPath := outImagePath + ".txt"
+			file, err := os.Create(txtPath)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer file.Close()
+			_, err = file.WriteString(string(output))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			payloads := &Payloads{
+				Text:     string(output),
+				Path:     txtPath,
+				FileName: image.Name + ".txt",
+			}
+			p, err := json.Marshal(payloads)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			w.Write(p)
 		}
 	})
 

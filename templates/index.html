@@ -120,11 +120,7 @@
             <textarea class="textArea" rows="10" cols="100">
 {{.Content}}</textarea
             >
-            <a
-                class="download"
-                style="text-align: end"
-                href="./../out/output.txt"
-                download
+            <a id="link" style="text-align: end" href="#" download
                 ><p>Download</p></a
             >
         </div>
@@ -137,11 +133,11 @@
         <script>
             const fileInput = document.getElementById("fileInput");
             const textArea = document.querySelector("textArea");
-            const loadingPopu = document.getElementById("loading-popup");
-            const download = document.querySelector("download");
+            const loadingPopup = document.getElementById("loading-popup");
+            const link = document.getElementById("link");
 
             fileInput.addEventListener("change", (e) => {
-                loadingPopu.style.display = "flex";
+                loadingPopup.style.display = "flex";
                 const file = e.target.files[0];
                 const formData = new FormData();
                 console.log("file is: ", file);
@@ -154,10 +150,12 @@
                     method: "POST",
                     body: formData,
                 })
-                    .then((res) => res.text())
+                    .then((res) => res.json())
                     .then((data) => {
-                        loadingPopu.style.display = "none";
-                        textArea.value = data;
+                        loadingPopup.style.display = "none";
+                        textArea.value = data.content;
+                        link.href = data.path;
+                        link.download = data.filename;
                     });
             });
         </script>

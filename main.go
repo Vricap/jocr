@@ -60,8 +60,11 @@ func (img *Image) detectImage(path string) ([]byte, error) {
 func main() {
 	fmt.Println("Server run on", HOST+PORT)
 
-	fs := http.FileServer(http.Dir("./out"))
-	http.Handle("/out/", http.StripPrefix("/out/", fs))
+	o := http.FileServer(http.Dir("./out"))
+	http.Handle("/out/", http.StripPrefix("/out/", o))
+
+	s := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", s))
 
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +118,7 @@ func main() {
 				return
 			}
 
-			// TODO: periodically we must clean up the dir.
+			// TODO: periodically we must clean up the dir. try using linux cron jobs
 			txtPath := outImagePath + ".txt"
 			file, err := os.Create(txtPath)
 			if err != nil {

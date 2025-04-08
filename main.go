@@ -115,6 +115,7 @@ func main() {
 				return
 			}
 
+			// TODO: periodically we must clean up the dir.
 			txtPath := outImagePath + ".txt"
 			file, err := os.Create(txtPath)
 			if err != nil {

@@ -1,0 +1,98 @@
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    gap: 50px;
+    height: 100vh;
+    margin: 0;
+    margin-top: 20px;
+}
+
+.upload-container {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 400px;
+    max-width: 90%;
+}
+
+/* .upload-area {
+    border: 2px dashed #7b61ff;
+    border-radius: 16px;
+    padding: 10px;
+    transition:
+        background 0.3s,
+        border-color 0.3s;
+    cursor: pointer;
+    position: relative;
+} */
+
+.upload-area:hover {
+    background: #f9f5ff;
+    border-color: #5e42e4;
+    cursor: pointer;
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+.upload-icon {
+    font-size: 48px;
+    color: #7b61ff;
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    color: #555;
+    font-size: 16px;
+}
+
+.upload-area.dragover {
+    background: #f0eaff;
+    border-color: #5e42e4;
+}
+
+.output {
+    border: 2px dashed #7b61ff;
+    border-radius: 16px;
+    padding: 5px;
+}
+
+#loading-popup {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    z-index: 9999;
+}
+
+/* Optional loading animation */
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-right: 15px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

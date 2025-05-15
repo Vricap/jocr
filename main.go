@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const HOST string = "127.0.0.1"
+const HOST string = "0.0.0.0" // allow access from outside container
 const PORT string = ":8000"
 
 type Payloads struct {
